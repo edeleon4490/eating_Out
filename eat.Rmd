@@ -31,11 +31,16 @@ $H_A$ There is a statistical difference between at least two races with regard t
 source(file="fisherXY.R")
 require(tidyverse)
 require(tigerstats)
+require(haven)
 require(knitr)
-#require(haven)
-GSS=read.csv('GSS1996.csv')
-GSS1996$race = factor(GSS1996$race, level=c('black','white','other'))
-GSS1996$eatout = factor(GSS1996$eatout, levels=c('yes','no'))
+require(foreign)
+```
+```{r, eval=TRUE, warning=FALSE}
+GSS <-read_dta(file="GSS1996.dta")
+GSS <- readstata13::read.dta13(file="GSS1996.dta")
+GSS <- droplevels(GSS)
+mydata <- select(GSS,race,age,eatout)
+mydata <- na.omit(mydata)
 ```
 
 ## Methods
@@ -47,42 +52,47 @@ Both 'race' and 'eatout' are categorical. Therefore we will use the Cat_Cat.rmd 
 ### Graphical Description
 
 ```{r}
-barchartGC(~eatout+race, data=GSS1996)
-barchartGC(~eatout+race, data=GSS1996, type="percent")
+barchartGC(~eatout+race, data=GSS)
+barchartGC(~eatout+race, data=GSS, type="percent")
 ```
 
 
-The X-Axis is eatout (1=yes, 2=no) labels on the columns are (1=black, 2=white, 3=other) 
+In this plot chart we can see that the overall frequency of the white race to eat out is higher than the black and the other races. The black race has the highest frequency for not eating out, compared to the white and other races. All the other races represented in the graph had a median statistics compared to the data from th white and black races.
 
-White race does not eat out more than does, while Black race eats out more than does not.
 
 ## Numerical Description
 
 ```{r}
-table= xtabs(~eatout+race, data=GSS1996)
-print(table)
+table1 <- xtabs(~race + eatout, data=mydata)
+rowPerc(table1)
+colPerc(table1)
 ```
-Black race eats out more than White race and about the same rate as other
 
-## Infrential Results
+The white race is eating at a percentage of 82.83%, the black race is eating at the percentage of 68.75%, and the other races are eating at the percentage of 77.78%. 
+
+## Inferential Results
+
 
 ### Chi-squared Test Results
 
 ```{r}
-chisq.test(table)
-chisqtestGC(table)
+chisq.test(table1)
+chisqtestGC(table1)
+fisher.test(table1)
 ```
-There seems to be no relationship in the chi-squared test.
+
+By looking at this data, we notice there is a statistical difference between the data so we will use a fisherxy test.  
+
 
 ### fisherXY Test Results
 
 ```{r}
-fisher.test(table)
-fisherXY(GSS1996$race,GSS1996$eatout, printAll=T)
+fisherXY(mydata$race,mydata$eatout,printAll = TRUE)
 ```
 
-There is a significant difference between groups 1 and 2, but no significant difference between groups 1 and 3, or between groups 2 and 3.
+When we first ran the fisher XY command we got a low p-value only between white and black. However, when we ran it the other time, after adding the print, all equal, true part, we got two different other values that were significantly higher than the first one.
+
 
 ## Summary and Conclusions
 
-the data suggest that there is a statistical difference between at least two races with regard to the frequency of eating out. Specifically, Black individuals tend to eat out more frequently compared to White individuals. However, there is no significant difference in the frequency of eating out between Black and Other racial groups, or between White and Other racial groups. Because of this we must reject the $H_0$
+In conclusion the data suggest that there is a difference in the frequency, and the percentage of the routes between the black and the white races. The data indicated that there is a statistically significant difference in the data between the two races. The graphical and  numerical results, both indicate that the white race eats out at a higher frequency and percentage than the black and other races. The critical P-value showed that the frequency of eating out is the difference between the white and black races. Therefore, we reject the $H_0$ that There is no difference among the various races with regard to frequency of eating out
